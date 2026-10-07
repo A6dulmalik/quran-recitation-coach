@@ -3,11 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "sync-data": "node scripts/sync-quran-data.mjs",
+    "predev": "npm run sync-data",
     "dev": "next dev",
+    "prebuild": "npm run sync-data",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "1.1.15",
@@ -21,6 +25,7 @@
     "@radix-ui/react-switch": "1.2.6",
     "@radix-ui/react-tabs": "1.1.13",
     "@radix-ui/react-tooltip": "1.2.8",
+    "@repo/quran-data": "*",
     "@repo/types": "*",
     "@repo/utils": "*",
     "@vercel/analytics": "1.6.1",

@@ -18,6 +18,9 @@ out/
 .turbo/
 *.tsbuildinfo
 
+# Generated copy of packages/quran-data/data (see apps/web/scripts/sync-quran-data.mjs)
+apps/web/public/quran/
+
 # Common ignores
 node_modules
 .next/
