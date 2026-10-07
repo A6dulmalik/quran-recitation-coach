@@ -16,6 +16,8 @@
   "scripts": {
     "dev": "tsup src/index.ts --format esm --dts --watch",
     "build": "tsup src/index.ts --format esm --dts",
-    "lint": "tsc --noEmit"
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   }
 }

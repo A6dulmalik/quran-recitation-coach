@@ -153,7 +153,7 @@ export default function SelectSurahPage() {
                 <ol className="space-y-2 text-sm text-muted-foreground">
                   <li>1. Select a Surah from the list</li>
                   <li>2. Choose to recite the full Surah or specific verses</li>
-                  <li>3. Click "Begin" to start practicing</li>
+                  <li>3. Click &quot;Begin&quot; to start practicing</li>
                   <li>4. Record your recitation</li>
                   <li>5. Get instant feedback on accuracy</li>
                 </ol>

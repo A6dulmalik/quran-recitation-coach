@@ -1,5 +1,3 @@
-// 'use client';
-
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BookOpen, Headphones, Sparkles, Zap } from "lucide-react";
 import Link from "next/link";
@@ -13,7 +11,7 @@ export default function OnboardingPage() {
           <div className="flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-primary" />
             <h1 className="text-xl font-semibold text-foreground">
-              Qur'an Coaching
+              Qur&apos;an Coaching
             </h1>
           </div>
         </div>
@@ -28,7 +26,7 @@ export default function OnboardingPage() {
               <Headphones className="w-10 h-10 text-primary" />
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Perfect Your Qur'an Recitation
+              Perfect Your Qur&apos;an Recitation
             </h2>
             <p className="text-lg text-muted-foreground max-w-lg mx-auto">
               Get real-time feedback and guidance to improve your recitation
@@ -63,7 +61,7 @@ export default function OnboardingPage() {
                 description: "See detailed analysis and improvements to make",
                 icon: Sparkles,
               },
-            ].map(({ step, title, description, icon: Icon }) => (
+            ].map(({ step, title, description }) => (
               <div
                 key={step}
                 className="flex gap-4 p-4 rounded-lg bg-card border border-border/50 hover:border-primary/30 transition-colors"

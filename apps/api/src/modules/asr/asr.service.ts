@@ -44,13 +44,8 @@ export class AsrService {
         response_format: "text",
       });
 
-      // When response_format is "text" the SDK returns a plain string
-      const text =
-        typeof response === "string" ? response : (
-          ((response as any).text ?? "")
-        );
-
-      return { text: text.trim() };
+      // With response_format "text" the SDK returns a plain string
+      return { text: response.trim() };
     } catch (error) {
       this.logger.error("Whisper transcription failed", error);
       throw new InternalServerErrorException("Transcription failed");
