@@ -1,130 +1,71 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { ArrowRight, BookOpen, Headphones, Mic, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BookOpen, Headphones, Sparkles, Zap } from "lucide-react";
-import Link from "next/link";
+import { progressStore } from "@/lib/progress";
+
+const STEPS = [
+  { icon: BookOpen, title: "Choose a surah", text: "All 114 surahs, the whole surah or just the ayahs you're memorising." },
+  { icon: Headphones, title: "Listen first", text: "Hear each ayah from a renowned reciter before you try it." },
+  { icon: Mic, title: "Recite one ayah at a time", text: "Tap the microphone, recite, and tap again when you finish." },
+  {
+    icon: Sparkles,
+    title: "See every mistake",
+    text: "Words you changed, skipped or added are highlighted, and stopping where you should join (waṣl) is flagged.",
+  },
+];
 
 export default function OnboardingPage() {
+  const router = useRouter();
+
+  const getStarted = () => {
+    progressStore.update((s) => ({ ...s, onboarded: true }));
+    router.push("/surahs");
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-semibold text-foreground">
-              Qur&apos;an Coaching
-            </h1>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        <div className="max-w-2xl w-full">
-          {/* Hero Section */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
-              <Headphones className="w-10 h-10 text-primary" />
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Perfect Your Qur&apos;an Recitation
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-lg mx-auto">
-              Get real-time feedback and guidance to improve your recitation
-              accuracy
-            </p>
-          </div>
-
-          {/* Steps */}
-          <div className="space-y-4 mb-12">
-            {[
-              {
-                step: 1,
-                title: "Select a Surah",
-                description: "Choose from all 114 Surahs of the Qur'an",
-                icon: BookOpen,
-              },
-              {
-                step: 2,
-                title: "Choose Your Practice",
-                description: "Recite the full Surah or specific verses",
-                icon: Zap,
-              },
-              {
-                step: 3,
-                title: "Start Reciting",
-                description: "Record your recitation with real-time guidance",
-                icon: Headphones,
-              },
-              {
-                step: 4,
-                title: "Get Instant Feedback",
-                description: "See detailed analysis and improvements to make",
-                icon: Sparkles,
-              },
-            ].map(({ step, title, description }) => (
-              <div
-                key={step}
-                className="flex gap-4 p-4 rounded-lg bg-card border border-border/50 hover:border-primary/30 transition-colors"
-              >
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 flex-shrink-0">
-                  <span className="text-sm font-semibold text-primary">
-                    {step}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">
-                    {title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Features */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-            {[
-              {
-                title: "Word-by-Word Analysis",
-                description: "See exactly which words need improvement",
-              },
-              {
-                title: "Real-Time Feedback",
-                description: "Get instant guidance as you recite",
-              },
-              {
-                title: "Accuracy Score",
-                description: "Track your progress with detailed metrics",
-              },
-            ].map((feature, idx) => (
-              <div
-                key={idx}
-                className="p-4 rounded-lg bg-secondary/50 border border-border/50"
-              >
-                <h4 className="font-semibold text-foreground mb-2">
-                  {feature.title}
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* CTA Button */}
-          <Link href="/select-surah" className="block">
-            <Button size="lg" className="w-full gap-2 text-lg py-6">
-              Start Recitation
-              <ArrowRight className="w-5 h-5" />
-            </Button>
-          </Link>
-
-          {/* Info Text */}
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            No account needed. Your practice sessions are stored locally on this
-            device.
+    <div className="min-h-dvh bg-gradient-to-b from-primary/10 via-background to-background">
+      <main className="mx-auto flex max-w-xl flex-col px-4 py-12">
+        <div className="text-center">
+          <span
+            className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary font-arabic text-3xl text-primary-foreground"
+            aria-hidden
+          >
+            ق
+          </span>
+          <h1 className="mt-6 text-3xl font-bold sm:text-4xl">Perfect your Qur&apos;an recitation</h1>
+          <p className="mt-3 text-muted-foreground">
+            Recite aloud and get word-by-word feedback on every ayah, until you can recite it perfectly.
           </p>
         </div>
+
+        <ol className="mt-10 space-y-3">
+          {STEPS.map(({ icon: Icon, title, text }, k) => (
+            <li key={title} className="flex gap-4 rounded-xl border border-border/60 bg-card p-4">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Icon className="size-5" aria-hidden />
+                <span className="sr-only">Step {k + 1}</span>
+              </span>
+              <div>
+                <h2 className="font-semibold">{title}</h2>
+                <p className="text-sm text-muted-foreground">{text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <Button size="lg" className="mt-8 gap-2 py-6 text-base" onClick={getStarted}>
+          Get started <ArrowRight className="size-5" />
+        </Button>
+
+        <p className="mt-6 flex gap-2 text-xs text-muted-foreground">
+          <ShieldCheck className="size-4 shrink-0" aria-hidden />
+          <span>
+            No account needed; your progress stays on this device. To check a recitation, the recording is sent
+            securely to our server and a speech-recognition service. This app does not store your recordings.
+          </span>
+        </p>
       </main>
     </div>
   );

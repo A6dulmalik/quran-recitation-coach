@@ -1,7 +1,8 @@
-import type { Metadata } from 'next'
-import { Amiri_Quran, Geist } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
+import { Amiri_Quran, Geist } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 // Designed for Qur'anic text (Uthmani marks, waqf signs); SIL Open Font License.
@@ -12,39 +13,39 @@ const amiriQuran = Amiri_Quran({
 });
 
 export const metadata: Metadata = {
-  title: 'Qur\'an Recitation Evaluator',
-  description: 'Evaluate your Qur\'an recitation with AI-powered feedback',
-  generator: 'v0.app',
+  title: {
+    default: "Qur'an Recitation Coach",
+    template: "%s · Qur'an Recitation Coach",
+  },
+  description: "Recite the Qur'an aloud and get word-by-word feedback on every ayah.",
+  applicationName: "Qur'an Recitation Coach",
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
+      { url: "/icon-light-32x32.png", media: "(prefers-color-scheme: light)" },
+      { url: "/icon-dark-32x32.png", media: "(prefers-color-scheme: dark)" },
+      { url: "/icon.svg", type: "image/svg+xml" },
     ],
-    apple: '/apple-icon.png',
+    apple: "/apple-icon.png",
   },
-}
+};
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#00785a",
+};
+
+// Vercel Web Analytics only works on Vercel; opt in explicitly.
+const analyticsEnabled = process.env.NEXT_PUBLIC_VERCEL_ANALYTICS === "1";
+
+export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en" className="bg-background">
       <body className={`${geist.variable} ${amiriQuran.variable} font-sans antialiased`}>
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        {analyticsEnabled && <Analytics />}
       </body>
     </html>
-  )
+  );
 }
