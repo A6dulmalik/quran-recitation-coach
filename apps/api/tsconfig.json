@@ -1,0 +1,39 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "declaration": true,
+        "removeComments": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "ES2022",
+        "sourceMap": true,
+        "outDir": "./dist",
+        "rootDir": "../..",
+        "incremental": true,
+        "baseUrl": ".",
+        "paths": {
+            "@repo/types": [
+                "../../packages/types/src/index.ts"
+            ],
+            "@repo/types/*": [
+                "../../packages/types/src/*"
+            ],
+            "@repo/utils": [
+                "../../packages/utils/src/index.ts"
+            ],
+            "@repo/utils/*": [
+                "../../packages/utils/src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}
