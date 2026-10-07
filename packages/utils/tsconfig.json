@@ -1,18 +1,25 @@
 {
-    "extends": "../../tsconfig.base.json",
-    "compilerOptions": {
-        "module": "ESNext",
-        "moduleResolution": "Bundler",
-        "outDir": "dist",
-        "declaration": true,
-        "emitDeclarationOnly": false,
-        "composite": true
-    },
-    "include": [
-        "src/**/*.ts"
-    ],
-    "exclude": [
-        "dist",
-        "node_modules"
-    ]
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist",
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "paths": {
+      "@repo/types": [
+        "../types/src/index.ts"
+      ],
+      "@repo/quran-data": [
+        "../quran-data/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

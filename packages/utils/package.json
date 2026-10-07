@@ -19,5 +19,9 @@
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@repo/quran-data": "*",
+    "@repo/types": "*"
   }
 }
