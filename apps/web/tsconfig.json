@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "dom",
@@ -17,14 +18,28 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "ignoreDeprecations": "6.0",
     "plugins": [
       {
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@repo/types": [
+        "../../packages/types/src/index.ts"
+      ],
+      "@repo/types/*": [
+        "../../packages/types/src/*"
+      ],
+      "@repo/utils": [
+        "../../packages/utils/src/index.ts"
+      ],
+      "@repo/utils/*": [
+        "../../packages/utils/src/*"
       ]
     }
   },
