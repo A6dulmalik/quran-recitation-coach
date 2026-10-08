@@ -9,10 +9,11 @@ const fromRoot = (path: string) =>
 export default defineConfig({
   plugins: [swc.vite({ module: { type: "es6" } })],
   resolve: {
-    alias: {
-      "@repo/types": fromRoot("packages/types/src/index.ts"),
-      "@repo/utils": fromRoot("packages/utils/src/index.ts"),
-    },
+    alias: [
+      { find: "@repo/quran-data", replacement: fromRoot("packages/quran-data/src/index.ts") },
+      { find: "@repo/types", replacement: fromRoot("packages/types/src/index.ts") },
+      { find: "@repo/utils", replacement: fromRoot("packages/utils/src/index.ts") },
+    ],
   },
   test: {
     include: ["src/**/*.spec.ts"],
