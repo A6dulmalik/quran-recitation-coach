@@ -1,0 +1,19 @@
+{
+  "name": "Qur'an Recitation Coach",
+  "short_name": "Recitation",
+  "description": "Recite the Qur'an aloud and get word-by-word feedback on every ayah.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "en",
+  "background_color": "#f4fbfb",
+  "theme_color": "#00785a",
+  "categories": ["education", "books"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

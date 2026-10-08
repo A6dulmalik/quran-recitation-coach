@@ -23,6 +23,9 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     permissions: ["microphone"],
+    // A controlling service worker hides requests from page.route mocks;
+    // e2e/pwa.spec.ts opts back in.
+    serviceWorkers: "block",
     trace: "retain-on-failure",
   },
   projects: [

@@ -8,6 +8,7 @@
     "dev": "next dev",
     "prebuild": "npm run sync-data",
     "build": "next build",
+    "postbuild": "node scripts/generate-sw.mjs",
     "start": "node scripts/serve-static.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
