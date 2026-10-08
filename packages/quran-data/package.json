@@ -1,0 +1,28 @@
+{
+  "name": "@repo/quran-data",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Qur'an text (Tanzil Uthmani + Simple-Clean, verbatim) and word model",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./data/*": "./data/*",
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "data", "NOTICE.md"],
+  "scripts": {
+    "generate": "node scripts/build-data.mjs",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "build": "tsup src/index.ts --format esm --dts",
+    "lint": "eslint src scripts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}

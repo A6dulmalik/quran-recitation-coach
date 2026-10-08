@@ -41,64 +41,20 @@ export type RecitationState =
 export type RecitationMode = "simulation" | "real";
 
 // ---------------------------------------------------------------------------
-// Qur'an data (structured as word arrays per ENGINE_SPEC.md)
+// Input
 // ---------------------------------------------------------------------------
 
-type SurahData = {
-  meaning: string;
-  verses: string[][];
-};
+/** One ayah to recite: its number and Uthmani display words. */
+export interface EngineAyah {
+  number: number;
+  words: string[];
+}
 
-export const QURAN_DATA: Record<number, SurahData> = {
-  1: {
-    meaning: "Al-Fatiha - The Opening",
-    verses: [
-      ["بِسْمِ", "اللَّهِ", "الرَّحْمَٰنِ", "الرَّحِيمِ"],
-      ["الْحَمْدُ", "لِلَّهِ", "رَبِّ", "الْعَالَمِينَ"],
-      ["الرَّحْمَٰنِ", "الرَّحِيمِ"],
-      ["مَالِكِ", "يَوْمِ", "الدِّينِ"],
-      ["إِيَّاكَ", "نَعْبُدُ", "وَإِيَّاكَ", "نَسْتَعِينُ"],
-      ["اهْدِنَا", "الصِّرَاطَ", "الْمُسْتَقِيمَ"],
-      [
-        "صِرَاطَ",
-        "الَّذِينَ",
-        "أَنْعَمْتَ",
-        "عَلَيْهِمْ",
-        "غَيْرِ",
-        "الْمَغْضُوبِ",
-        "عَلَيْهِمْ",
-        "وَلَا",
-        "الضَّالِّينَ",
-      ],
-    ],
-  },
-  36: {
-    meaning: "Ya-Sin",
-    verses: [
-      ["يس"],
-      ["وَالْقُرْآنِ", "الْحَكِيمِ"],
-      ["إِنَّكَ", "لَمِنَ", "الْمُرْسَلِينَ"],
-      ["عَلَىٰ", "صِرَاطٍ", "مُسْتَقِيمٍ"],
-      ["تَنزِيلَ", "الْعَزِيزِ", "الرَّحِيمِ"],
-    ],
-  },
-};
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-export function buildVerses(
-  surahNum: number,
-  startVerse: number,
-  endVerse: number,
-): VerseState[] {
-  const surah = QURAN_DATA[surahNum];
-  if (!surah) return [];
-  return surah.verses.slice(startVerse - 1, endVerse).map((wordTexts, idx) => ({
-    verseNumber: startVerse + idx,
+export function buildVerses(ayahs: EngineAyah[]): VerseState[] {
+  return ayahs.map((ayah) => ({
+    verseNumber: ayah.number,
     status: "idle" as const,
-    words: wordTexts.map((text) => ({ text, status: "pending" as const })),
+    words: ayah.words.map((text) => ({ text, status: "pending" as const })),
   }));
 }
 
@@ -109,9 +65,8 @@ const INCORRECT_WORD_CHANCE = 0.2;
 // ---------------------------------------------------------------------------
 
 export interface UseRecitationEngineOptions {
-  surahNum: number;
-  startVerse: number;
-  endVerse: number;
+  /** Ayahs to recite, in order. Changing this requires remounting the hook. */
+  ayahs: EngineAyah[];
   /** Defaults to "simulation" */
   mode?: RecitationMode;
   /** Optional callback fired whenever the active word changes. */
@@ -167,9 +122,7 @@ export interface UseRecitationEngineReturn {
 // ---------------------------------------------------------------------------
 
 export function useRecitationEngine({
-  surahNum,
-  startVerse,
-  endVerse,
+  ayahs,
   mode = "simulation",
   onWordChange,
   onError,
@@ -178,7 +131,7 @@ export function useRecitationEngine({
   // -------------------------------------------------------------------------
   // State (drives the render)
   // -------------------------------------------------------------------------
-  const initialVerses = buildVerses(surahNum, startVerse, endVerse);
+  const initialVerses = buildVerses(ayahs);
 
   const [recitationState, setRecitationState] =
     useState<RecitationState>("idle");
@@ -583,7 +536,7 @@ export function useRecitationEngine({
     setCurrentVerse(0);
     setCurrentWord(-1);
 
-    const fresh = buildVerses(surahNum, startVerse, endVerse).map((v) => ({
+    const fresh = buildVerses(ayahs).map((v) => ({
       ...v,
       status: "idle" as const,
       words: v.words.map((word) => ({ ...word, status: "pending" as const })),
@@ -624,9 +577,7 @@ export function useRecitationEngine({
     setVersesState,
     startTimers,
     stopMediaRecorder,
-    surahNum,
-    startVerse,
-    endVerse,
+    ayahs,
   ]);
 
   const stop = useCallback(() => {
@@ -645,7 +596,7 @@ export function useRecitationEngine({
     setCurrentVerse(0);
     setCurrentWord(-1);
     setVersesState(
-      buildVerses(surahNum, startVerse, endVerse).map((verse) => ({
+      buildVerses(ayahs).map((verse) => ({
         ...verse,
         status: "idle" as const,
         words: verse.words.map((word) => ({
@@ -661,9 +612,7 @@ export function useRecitationEngine({
     setRecitation,
     setVersesState,
     stopMediaRecorder,
-    surahNum,
-    startVerse,
-    endVerse,
+    ayahs,
   ]);
 
   const pause = useCallback(() => {

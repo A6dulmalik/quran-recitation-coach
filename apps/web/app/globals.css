@@ -76,6 +76,7 @@
 
 @theme inline {
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-quran: var(--font-amiri-quran), "Noto Naskh Arabic", "Traditional Arabic", serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -123,9 +124,9 @@
   }
 
   /* Arabic font support */
+  /* Qur'anic text */
   .font-arabic {
-    font-family:
-      "Noto Sans Arabic", "Arabic Typesetting", "Droid Arabic Naskh", sans-serif;
+    font-family: var(--font-amiri-quran), "Noto Naskh Arabic", "Traditional Arabic", serif;
     direction: rtl;
   }
 

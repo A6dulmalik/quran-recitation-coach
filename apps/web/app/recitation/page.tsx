@@ -1,7 +1,14 @@
 "use client";
 
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
+import {
+  getAyahWords,
+  getSurahMeta,
+  TANZIL_ATTRIBUTION,
+  type SurahFile,
+  type SurahMeta,
+} from "@repo/quran-data";
 import { Button } from "@/components/ui/button";
 import {
   Mic,
@@ -12,31 +19,106 @@ import {
   ChevronLeft,
   AlertCircle,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import {
   useRecitationEngine,
-  QURAN_DATA,
+  type EngineAyah,
   type WordStatus,
 } from "@/hooks/use-recitation-engine";
+import { useSurah } from "@/lib/quran";
 
-function RecitationPageContent() {
+/** Parse ?surah=&start=&end= into a valid range, or null if invalid. */
+function parseRange(params: URLSearchParams) {
+  const meta = getSurahMeta(Number(params.get("surah")));
+  if (!meta) return null;
+  const start = params.has("start") ? Number(params.get("start")) : 1;
+  const end = params.has("end") ? Number(params.get("end")) : meta.ayahCount;
+  const valid =
+    Number.isInteger(start) &&
+    Number.isInteger(end) &&
+    start >= 1 &&
+    start <= end &&
+    end <= meta.ayahCount;
+  return valid ? { meta, start, end } : null;
+}
+
+function CenteredMessage({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-4 text-center">
+      {children}
+    </div>
+  );
+}
+
+function RecitationRoute() {
   const searchParams = useSearchParams();
-  const surahNum = parseInt(searchParams.get("surah") || "1");
-  const startVerse = parseInt(searchParams.get("start") || "1");
-  const endVerse = parseInt(
-    searchParams.get("end") || String(QURAN_DATA[surahNum]?.verses.length ?? 7),
+  const range = parseRange(searchParams);
+  const state = useSurah(range?.meta.number ?? 1);
+
+  if (!range) {
+    return (
+      <CenteredMessage>
+        <AlertCircle className="h-8 w-8 text-destructive" />
+        <p className="text-lg font-semibold">That surah or verse range does not exist.</p>
+        <Button asChild>
+          <Link href="/select-surah">Choose a surah</Link>
+        </Button>
+      </CenteredMessage>
+    );
+  }
+
+  if (state.status === "loading") {
+    return (
+      <CenteredMessage>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+        <p className="text-muted-foreground">Loading {range.meta.transliteration}…</p>
+      </CenteredMessage>
+    );
+  }
+
+  if (state.status === "error") {
+    return (
+      <CenteredMessage>
+        <AlertCircle className="h-8 w-8 text-destructive" />
+        <p className="text-lg font-semibold">Could not load {range.meta.transliteration}.</p>
+        <p className="text-sm text-muted-foreground">{state.error}</p>
+        <Button onClick={state.retry}>Try again</Button>
+      </CenteredMessage>
+    );
+  }
+
+  return (
+    <RecitationSession
+      key={`${range.meta.number}:${range.start}-${range.end}`}
+      meta={range.meta}
+      surah={state.surah}
+      start={range.start}
+      end={range.end}
+    />
+  );
+}
+
+interface RecitationSessionProps {
+  meta: SurahMeta;
+  surah: SurahFile;
+  start: number;
+  end: number;
+}
+
+function RecitationSession({ meta, surah, start, end }: RecitationSessionProps) {
+  const ayahs = useMemo<EngineAyah[]>(
+    () =>
+      surah.ayahs.slice(start - 1, end).map((ayah) => ({
+        number: ayah.number,
+        words: getAyahWords(ayah).words.map((w) => w.text),
+      })),
+    [surah, start, end],
   );
 
-  const surahData = QURAN_DATA[surahNum];
-
   // ── Engine (all recitation logic lives here) ──────────────────────────────
-  const engine = useRecitationEngine({
-    surahNum,
-    startVerse,
-    endVerse,
-    mode: "simulation",
-  });
+  const engine = useRecitationEngine({ ayahs, mode: "simulation" });
   const {
     recitationState,
     verses,
@@ -128,10 +210,14 @@ function RecitationPageContent() {
           </Link>
           <div className="text-center">
             <h1 className="font-semibold text-foreground">
-              {surahData?.meaning}
+              {meta.transliteration}{" "}
+              <span lang="ar" className="font-arabic">
+                {meta.name}
+              </span>
             </h1>
             <p className="text-xs text-muted-foreground mt-1">
-              Verses {startVerse} - {endVerse}
+              {start === end ? `Verse ${start}` : `Verses ${start}–${end}`} of{" "}
+              {meta.ayahCount}
             </p>
           </div>
           <div className="text-right">
@@ -180,6 +266,15 @@ function RecitationPageContent() {
         {/* Qur'anic Text Display */}
         {recitationState !== "completed" && (
           <div className="space-y-6 mb-12">
+            {surah.bismillah && start === 1 && (
+              <p
+                lang="ar"
+                dir="rtl"
+                className="text-center text-3xl leading-[2] font-arabic text-foreground/80"
+              >
+                {surah.bismillah}
+              </p>
+            )}
             {verses.map((verse, idx) => (
               <div
                 key={verse.verseNumber}
@@ -212,7 +307,8 @@ function RecitationPageContent() {
                 </span>
                 {/* Words always rendered as individual spans */}
                 <div
-                  className="flex flex-wrap gap-x-3 gap-y-2 justify-end"
+                  lang="ar"
+                  className="flex flex-wrap gap-x-3 gap-y-2 justify-start"
                   dir="rtl"
                 >
                   {verse.words.map((word, wordIdx) => {
@@ -286,7 +382,8 @@ function RecitationPageContent() {
 
                     {/* Word-by-word review using the same span structure */}
                     <div
-                      className="bg-secondary/50 rounded p-4 mb-3 flex flex-wrap gap-x-2 gap-y-1 justify-end"
+                      lang="ar"
+                      className="bg-secondary/50 rounded p-4 mb-3 flex flex-wrap gap-x-2 gap-y-1 justify-start"
                       dir="rtl"
                     >
                       {verse.words.map((word, wordIdx) => (
@@ -349,6 +446,18 @@ function RecitationPageContent() {
             </div>
           </div>
         )}
+        <p className="mt-8 text-center text-xs text-muted-foreground">
+          Qur&apos;an text:{" "}
+          <a
+            href={TANZIL_ATTRIBUTION.url}
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
+            {TANZIL_ATTRIBUTION.name}
+          </a>{" "}
+          ({TANZIL_ATTRIBUTION.license})
+        </p>
       </main>
 
       {/* Floating Controls */}
@@ -491,7 +600,7 @@ function RecitationPageContent() {
 export default function RecitationPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-background" />}>
-      <RecitationPageContent />
+      <RecitationRoute />
     </Suspense>
   );
 }

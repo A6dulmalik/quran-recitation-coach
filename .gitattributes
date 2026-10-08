@@ -1,0 +1,4 @@
+# Qur'an text must stay byte-for-byte identical to the Tanzil sources (license:
+# verbatim copies only), so never convert line endings in these files.
+packages/quran-data/sources/** -text
+packages/quran-data/data/** -text

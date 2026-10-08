@@ -39,6 +39,9 @@
       ],
       "@repo/utils/*": [
         "../../packages/utils/src/*"
+      ],
+      "@repo/quran-data": [
+        "../../packages/quran-data/src/index.ts"
       ]
     }
   },
