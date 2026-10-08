@@ -21,6 +21,10 @@ out/
 # Generated copy of packages/quran-data/data (see apps/web/scripts/sync-quran-data.mjs)
 apps/web/public/quran/
 
+# Playwright output
+test-results/
+playwright-report/
+
 # Common ignores
 node_modules
 .next/
