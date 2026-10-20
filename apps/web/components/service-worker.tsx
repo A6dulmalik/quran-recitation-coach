@@ -14,8 +14,15 @@ export function ServiceWorker() {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;
 
+    // The first install claims this page (no controller -> controller); that is
+    // not an update, so don't reload. Later changes replace a running worker.
+    let hadController = !!navigator.serviceWorker.controller;
     let reloading = false;
     const onControllerChange = () => {
+      if (!hadController) {
+        hadController = true;
+        return;
+      }
       if (reloading) return;
       reloading = true;
       window.location.reload();
