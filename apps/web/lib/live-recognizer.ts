@@ -93,11 +93,7 @@ export async function startLiveRecognizer(
   let stopped = false;
   const queued: string[] = [];
 
-  const socket = new WebSocket(session.url, [
-    "realtime",
-    `openai-insecure-api-key.${session.clientSecret}`,
-    "openai-beta.realtime-v1",
-  ]);
+  const socket = new WebSocket(session.url, ["realtime", `openai-insecure-api-key.${session.clientSecret}`]);
 
   const ctx = new AudioContext();
   const moduleUrl = URL.createObjectURL(new Blob([WORKLET_SOURCE], { type: "text/javascript" }));

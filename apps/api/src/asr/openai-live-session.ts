@@ -3,12 +3,14 @@ import type { LiveSession } from "@repo/types";
 import { APP_CONFIG, type AppConfig } from "../config";
 import { LiveSessionError, LiveSessionProvider } from "./live-session";
 
-const SESSIONS_URL = "https://api.openai.com/v1/realtime/transcription_sessions";
+const SECRETS_URL = "https://api.openai.com/v1/realtime/client_secrets";
 const STREAM_URL = "wss://api.openai.com/v1/realtime?intent=transcription";
 
 /**
- * Mints an ephemeral OpenAI Realtime transcription token. The browser then
- * streams microphone audio to OpenAI directly with it (apps/web live recognizer).
+ * Mints an ephemeral OpenAI Realtime transcription client secret. The browser
+ * then streams microphone audio to OpenAI directly with it (apps/web live
+ * recognizer). Request shape follows the GA Realtime API (`session.type:
+ * "transcription"`, see the `openai` SDK's realtime/client-secrets types).
  */
 @Injectable()
 export class OpenAiLiveSessionProvider extends LiveSessionProvider {
@@ -28,13 +30,12 @@ export class OpenAiLiveSessionProvider extends LiveSessionProvider {
     }
     let response: Response;
     try {
-      response = await fetch(SESSIONS_URL, {
+      response = await fetch(SECRETS_URL, {
         method: "POST",
         headers: { Authorization: `Bearer ${this.config.openaiApiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          input_audio_transcription: { model: this.config.liveAsrModel, language: "ar" },
-          turn_detection: { type: "server_vad", silence_duration_ms: 900 },
-          input_audio_noise_reduction: { type: "near_field" },
+          expires_after: { anchor: "created_at", seconds: 600 },
+          session: this.sessionConfig(),
         }),
         signal: AbortSignal.timeout(15_000),
       });
@@ -53,18 +54,39 @@ export class OpenAiLiveSessionProvider extends LiveSessionProvider {
       );
     }
 
-    const body = (await response.json()) as { client_secret?: { value?: string; expires_at?: number } };
-    const secret = body.client_secret?.value;
+    const body = (await response.json()) as {
+      value?: string;
+      expires_at?: number;
+      client_secret?: { value?: string; expires_at?: number }; // older response shape
+    };
+    const secret = body.value ?? body.client_secret?.value;
     if (!secret) {
       this.logger.error("OpenAI live session response had no client secret");
       throw new LiveSessionError("Live feedback is temporarily unavailable.", 502);
     }
     return {
       clientSecret: secret,
-      expiresAt: body.client_secret?.expires_at,
+      expiresAt: body.expires_at ?? body.client_secret?.expires_at,
       url: STREAM_URL,
       model: this.config.liveAsrModel,
       sampleRate: 24_000,
+    };
+  }
+
+  /** gpt-realtime-whisper streams continuously (no VAD, no prompt); other models segment speech with server VAD. */
+  private sessionConfig() {
+    const model = this.config.liveAsrModel;
+    const streaming = model.includes("realtime-whisper");
+    return {
+      type: "transcription",
+      audio: {
+        input: {
+          format: { type: "audio/pcm", rate: 24_000 },
+          transcription: { model, language: "ar", ...(streaming && { delay: "low" }) },
+          noise_reduction: { type: "near_field" },
+          turn_detection: streaming ? null : { type: "server_vad", silence_duration_ms: 700 },
+        },
+      },
     };
   }
 }
