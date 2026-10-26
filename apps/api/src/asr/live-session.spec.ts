@@ -1,3 +1,4 @@
+import { Logger } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import type { LiveSession } from "@repo/types";
@@ -11,7 +12,10 @@ import { OpenAiLiveSessionProvider } from "./openai-live-session";
 
 const config = { ...loadConfig({}), openaiApiKey: "sk-test-key-1234" };
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 describe("OpenAiLiveSessionProvider", () => {
   it("asks OpenAI for an Arabic transcription client secret and returns only the ephemeral secret", async () => {
@@ -72,6 +76,19 @@ describe("OpenAiLiveSessionProvider", () => {
       status,
       message: expect.stringMatching(message),
     });
+  });
+
+  it("logs what to do when the OpenAI account is out of credit", async () => {
+    const logged = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ error: { code: "insufficient_quota" } }, { status: 429 })),
+    );
+    await expect(new OpenAiLiveSessionProvider(config).create()).rejects.toMatchObject({
+      status: 502,
+      message: "Live feedback is temporarily unavailable.",
+    });
+    expect(String(logged.mock.calls.at(-1)?.[0])).toContain("no credits left");
   });
 
   it("fails cleanly when OpenAI is unreachable or replies without a secret", async () => {

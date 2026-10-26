@@ -13,6 +13,9 @@ const MIME: Record<AudioFormat, string> = {
   flac: "audio/flac",
 };
 
+/** A 429 that retrying will not fix: the account is out of credit rather than rate limited. */
+export const isQuotaExhausted = (code: string | null | undefined) => code === "insufficient_quota";
+
 /** OpenAI speech-to-text. Only whisper-1 returns word timestamps. */
 @Injectable()
 export class OpenAiSpeechRecognizer extends SpeechRecognizer {
@@ -75,6 +78,14 @@ export class OpenAiSpeechRecognizer extends SpeechRecognizer {
         return new SpeechRecognitionError("Speech recognition is misconfigured on the server.", 503);
       }
       if (error.status === 429) {
+        if (isQuotaExhausted(error.code)) {
+          // The message is for whoever runs the server; clients get a neutral one.
+          this.logger.error(
+            "OpenAI account has no credits left (insufficient_quota). Add credits at " +
+              "https://platform.openai.com/settings/organization/billing/ and retry.",
+          );
+          return new SpeechRecognitionError("Recitation checking is temporarily unavailable.", 503);
+        }
         return new SpeechRecognitionError("Speech recognition is busy. Please try again shortly.", 503);
       }
     } else {
