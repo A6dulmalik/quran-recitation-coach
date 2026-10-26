@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from "@nestjs/common";
 import type { LiveSession } from "@repo/types";
 import { APP_CONFIG, type AppConfig } from "../config";
 import { LiveSessionError, LiveSessionProvider } from "./live-session";
+import { isQuotaExhausted } from "./openai-speech-recognizer";
 
 const SECRETS_URL = "https://api.openai.com/v1/realtime/client_secrets";
 const STREAM_URL = "wss://api.openai.com/v1/realtime?intent=transcription";
@@ -45,8 +46,17 @@ export class OpenAiLiveSessionProvider extends LiveSessionProvider {
     }
 
     if (!response.ok) {
-      // Auth errors echo part of the key, so log only the status.
-      this.logger.error(`OpenAI live session failed: ${response.status}`);
+      // Auth errors echo part of the key, so log only the status (and, for 429, the error code).
+      let detail = "";
+      if (response.status === 429) {
+        const code = ((await response.json().catch(() => ({}))) as { error?: { code?: string } }).error?.code;
+        if (isQuotaExhausted(code)) {
+          detail =
+            " (insufficient_quota: the OpenAI account has no credits left; add credits at " +
+            "https://platform.openai.com/settings/organization/billing/)";
+        }
+      }
+      this.logger.error(`OpenAI live session failed: ${response.status}${detail}`);
       const misconfigured = response.status === 401 || response.status === 403;
       throw new LiveSessionError(
         misconfigured ? "Speech recognition is misconfigured on the server." : "Live feedback is temporarily unavailable.",
