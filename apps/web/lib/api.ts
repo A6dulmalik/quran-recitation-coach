@@ -1,4 +1,4 @@
-import type { ApiErrorBody, AyahEvaluation } from "@repo/types";
+import type { ApiErrorBody, AyahEvaluation, LiveSession } from "@repo/types";
 
 /** Base URL of the evaluation API (apps/api). */
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
@@ -101,4 +101,17 @@ function extensionFor(mime: string): string {
   if (mime.includes("wav")) return "wav";
   if (mime.includes("mpeg")) return "mp3";
   return "webm";
+}
+
+/** Credentials for streaming recognition (live feedback while reciting). */
+export async function createLiveSession({ signal }: { signal?: AbortSignal } = {}): Promise<LiveSession> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/recitations/live-session`, { method: "POST", signal });
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    throw new ApiError("offline", FRIENDLY.offline);
+  }
+  if (res.ok) return (await res.json()) as LiveSession;
+  throw new ApiError(codeForStatus(res.status), FRIENDLY[codeForStatus(res.status)], res.status);
 }
