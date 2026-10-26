@@ -14,9 +14,10 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { SkipThrottle, ThrottlerGuard } from "@nestjs/throttler";
-import type { AyahEvaluation } from "@repo/types";
+import type { AyahEvaluation, LiveSession } from "@repo/types";
 import { evaluateRecitation, tokenizeArabic } from "@repo/utils";
 import { detectAudioFormat } from "../asr/audio-format";
+import { LiveSessionError, LiveSessionProvider } from "../asr/live-session";
 import { SpeechRecognitionError, SpeechRecognizer } from "../asr/speech-recognizer";
 import { QuranService } from "../quran/quran.service";
 
@@ -41,7 +42,27 @@ export class RecitationController {
   constructor(
     private readonly quran: QuranService,
     private readonly recognizer: SpeechRecognizer,
+    private readonly liveSessions: LiveSessionProvider,
   ) {}
+
+  /**
+   * Credentials for streaming recognition from the browser (live word-by-word
+   * feedback). Each session is a paid speech-recognition call, so it shares the
+   * evaluation rate limit.
+   */
+  @Post("live-session")
+  @HttpCode(200)
+  async liveSession(): Promise<LiveSession> {
+    if (!this.liveSessions.isConfigured()) {
+      throw new HttpException("Speech recognition is not configured on the server.", 503);
+    }
+    try {
+      return await this.liveSessions.create();
+    } catch (error) {
+      if (error instanceof LiveSessionError) throw new HttpException(error.message, error.status);
+      throw error;
+    }
+  }
 
   /**
    * Grade a recorded ayah.

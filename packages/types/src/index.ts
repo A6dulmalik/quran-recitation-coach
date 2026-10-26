@@ -58,3 +58,20 @@ export interface ApiErrorBody {
   message: string;
   error?: string;
 }
+
+/**
+ * Short-lived credentials for streaming speech recognition straight from the
+ * browser, so the OpenAI key never reaches the client.
+ */
+export interface LiveSession {
+  /** Ephemeral client secret; valid for a few minutes */
+  clientSecret: string;
+  /** Unix seconds when the secret expires, if the provider says */
+  expiresAt?: number;
+  /** WebSocket URL to stream audio to */
+  url: string;
+  /** Speech model in use */
+  model: string;
+  /** PCM16 mono sample rate the stream expects, in Hz */
+  sampleRate: number;
+}

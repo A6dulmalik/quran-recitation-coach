@@ -16,7 +16,7 @@ export interface EvaluateOptions {
   saktMinGap?: number;
 }
 
-interface Token {
+export interface Token {
   norm: string;
   raw: string;
   start?: number;
@@ -34,7 +34,7 @@ const SADAQA = tokenizeArabic("صدق الله العظيم");
 const startsWith = (tokens: Token[], seq: string[], at = 0) =>
   seq.every((s, k) => tokens[at + k]?.norm === s);
 
-function stripFormulae(tokens: Token[], expected: string[]): Token[] {
+export function stripFormulae(tokens: Token[], expected: string[]): Token[] {
   let start = 0;
   if (startsWith(tokens, ISTIADHA)) start += ISTIADHA.length;
   // Keep the basmala when it *is* the ayah (Al-Fatiha 1:1).
@@ -74,7 +74,7 @@ const MUQATTAAT = new Set(
 );
 
 /** Number of recited tokens spelling out the letters of `expected`, or 0. */
-function matchLetterNames(expected: string, tokens: Token[], at: number): number {
+export function matchLetterNames(expected: string, tokens: Token[], at: number): number {
   if (!MUQATTAAT.has(expected)) return 0;
   const letters = [...expected];
   const ok = letters.every((letter, k) => LETTER_NAMES[letter]?.includes(tokens[at + k]?.norm ?? ""));
@@ -89,7 +89,7 @@ type Op =
   | { kind: "missing"; e: number }
   | { kind: "extra"; r: number };
 
-function charDistance(a: string, b: string): number {
+export function charDistance(a: string, b: string): number {
   const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
   for (let i = 1; i <= a.length; i++) {
     let diag = prev[0];
