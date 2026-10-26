@@ -1,12 +1,16 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // End-to-end tests against the static export (npm run build first).
-// Uses the system Chrome (no browser download) with a fake microphone; the
+// Uses the system Chrome (no browser download; see PW_CHROMIUM_PATH) with a fake microphone; the
 // evaluation API is mocked per test with page.route.
 const PORT = 3200;
+// Defaults to the system Chrome. Set PW_CHROMIUM_PATH to use another Chromium
+// binary (for example the one Playwright's cloud images ship).
+const executablePath = process.env.PW_CHROMIUM_PATH;
 const chrome = {
-  channel: "chrome",
+  ...(executablePath ? {} : { channel: "chrome" }),
   launchOptions: {
+    ...(executablePath ? { executablePath } : {}),
     args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"],
   },
 };
