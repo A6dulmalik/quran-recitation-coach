@@ -27,6 +27,10 @@ export interface AyahRecord {
   clean: string;
   juz: number;
   page: number;
+  /** English translation, when sources/translation-en.txt was provided (see NOTICE.md) */
+  translation?: string;
+  /** Latin-letter reading aid, when sources/transliteration-en.txt was provided */
+  transliteration?: string;
   sajdah?: "recommended" | "obligatory";
 }
 
