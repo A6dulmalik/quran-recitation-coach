@@ -39,7 +39,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     trustProxy,
     openaiApiKey: env.OPENAI_API_KEY?.trim() || undefined,
     asrModel: env.ASR_MODEL?.trim() || "whisper-1",
-    liveAsrModel: env.LIVE_ASR_MODEL?.trim() || "gpt-4o-transcribe",
+    liveAsrModel: env.LIVE_ASR_MODEL?.trim() || "gpt-realtime-whisper",
     maxAudioBytes: positiveInt("MAX_AUDIO_MB", env.MAX_AUDIO_MB, 10) * 1024 * 1024,
     evaluationsPerMinute: positiveInt(
       "EVALUATIONS_PER_MINUTE",

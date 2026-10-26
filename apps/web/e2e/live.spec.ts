@@ -11,7 +11,7 @@ test("words turn green and red live while reciting, then the full grading follow
       json: {
         clientSecret: "ek_test",
         url: "wss://realtime.test/stream",
-        model: "gpt-4o-transcribe",
+        model: "gpt-realtime-whisper",
         sampleRate: 24000,
       },
     }),

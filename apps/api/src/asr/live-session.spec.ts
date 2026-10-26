@@ -14,9 +14,9 @@ const config = { ...loadConfig({}), openaiApiKey: "sk-test-key-1234" };
 afterEach(() => vi.unstubAllGlobals());
 
 describe("OpenAiLiveSessionProvider", () => {
-  it("asks OpenAI for an Arabic transcription session and returns only the ephemeral secret", async () => {
+  it("asks OpenAI for an Arabic transcription client secret and returns only the ephemeral secret", async () => {
     const fetchMock = vi.fn(async () =>
-      Response.json({ client_secret: { value: "ek_ephemeral", expires_at: 1_900_000_000 }, id: "sess_1" }),
+      Response.json({ value: "ek_ephemeral", expires_at: 1_900_000_000, session: { type: "transcription" } }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
@@ -26,17 +26,39 @@ describe("OpenAiLiveSessionProvider", () => {
       clientSecret: "ek_ephemeral",
       expiresAt: 1_900_000_000,
       url: "wss://api.openai.com/v1/realtime?intent=transcription",
-      model: "gpt-4o-transcribe",
+      model: "gpt-realtime-whisper",
       sampleRate: 24_000,
     });
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe("https://api.openai.com/v1/realtime/transcription_sessions");
+    expect(url).toBe("https://api.openai.com/v1/realtime/client_secrets");
     expect((init.headers as Record<string, string>).Authorization).toBe("Bearer sk-test-key-1234");
-    expect(JSON.parse(init.body as string).input_audio_transcription).toEqual({
-      model: "gpt-4o-transcribe",
-      language: "ar",
+    expect(JSON.parse(init.body as string)).toEqual({
+      expires_after: { anchor: "created_at", seconds: 600 },
+      session: {
+        type: "transcription",
+        audio: {
+          input: {
+            format: { type: "audio/pcm", rate: 24_000 },
+            transcription: { model: "gpt-realtime-whisper", language: "ar", delay: "low" },
+            noise_reduction: { type: "near_field" },
+            turn_detection: null, // gpt-realtime-whisper does not support VAD
+          },
+        },
+      },
     });
     expect(JSON.stringify(session)).not.toContain("sk-test-key");
+  });
+
+  it("uses server VAD for segment-based models and accepts the older response shape", async () => {
+    const fetchMock = vi.fn(async () => Response.json({ client_secret: { value: "ek_old", expires_at: 5 } }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const session = await new OpenAiLiveSessionProvider({ ...config, liveAsrModel: "gpt-4o-transcribe" }).create();
+
+    expect(session).toMatchObject({ clientSecret: "ek_old", expiresAt: 5, model: "gpt-4o-transcribe" });
+    const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
+    expect(body.session.audio.input.turn_detection).toEqual({ type: "server_vad", silence_duration_ms: 700 });
+    expect(body.session.audio.input.transcription).toEqual({ model: "gpt-4o-transcribe", language: "ar" });
   });
 
   it.each([
