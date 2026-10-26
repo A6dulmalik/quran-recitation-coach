@@ -1,12 +1,21 @@
 // Generates data/surahs.json and data/surah/NNN.json from the verbatim Tanzil
 // sources in ../sources. The Qur'an text is copied character-for-character;
 // the Tanzil license forbids changing it. Run: npm run generate -w @repo/quran-data
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (file) => readFileSync(join(root, "sources", file), "utf8");
+
+import { parseTanzilTranslation } from "./translation.mjs";
+
+// Optional English reading aids, downloaded from https://tanzil.net/trans/ into
+// sources/ (see NOTICE.md). Without these files the data is generated as before.
+const optional = (file) =>
+  existsSync(join(root, "sources", file)) ? parseTanzilTranslation(read(file)) : null;
+const translation = optional("translation-en.txt"); // e.g. en.sahih
+const transliteration = optional("transliteration-en.txt"); // en.transliteration
 
 const attrs = (tag) =>
   Object.fromEntries([...tag.matchAll(/(\w+)="([^"]*)"/g)].map((m) => [m[1], m[2]]));
@@ -70,6 +79,8 @@ const notice = {
     "Verbatim copy. Changing the Qur'an text is not allowed. Source (Tanzil Project) must be indicated with a link to tanzil.net.",
   uthmaniCopyright: copyrightBlock(uthmaniXml),
   simpleCleanCopyright: copyrightBlock(cleanXml),
+  ...(translation && { translationCopyright: translation.copyright }),
+  ...(transliteration && { transliterationCopyright: transliteration.copyright }),
 };
 
 const outDir = join(root, "data");
@@ -98,6 +109,9 @@ for (const meta of suraMeta) {
       juz: juzOf(k),
       page: pageOf(k),
     };
+    const ref = `${number}:${ayahNumber}`;
+    if (translation?.entries.has(ref)) ayah.translation = translation.entries.get(ref);
+    if (transliteration?.entries.has(ref)) ayah.transliteration = transliteration.entries.get(ref);
     const sajdah = sajdahAt.get(k);
     if (sajdah) ayah.sajdah = sajdah;
     return ayah;
