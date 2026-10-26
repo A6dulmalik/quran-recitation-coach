@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadConfig } from "./config";
+import { describeKey, loadConfig, shadowedEnvVars } from "./config";
 
 describe("loadConfig", () => {
   it("has safe local defaults and no API key requirement", () => {
@@ -31,5 +31,26 @@ describe("loadConfig", () => {
   it("fails fast on invalid numbers", () => {
     expect(() => loadConfig({ PORT: "abc" })).toThrow(/PORT/);
     expect(() => loadConfig({ EVALUATIONS_PER_MINUTE: "0" })).toThrow(/EVALUATIONS_PER_MINUTE/);
+  });
+});
+
+describe("shadowedEnvVars", () => {
+  it("reports a shell variable that overrides a different value in .env", () => {
+    expect(shadowedEnvVars({ OPENAI_API_KEY: "sk-new" }, { OPENAI_API_KEY: "sk-old" })).toEqual(["OPENAI_API_KEY"]);
+  });
+
+  it("ignores matching values and variables missing from either side", () => {
+    expect(shadowedEnvVars({ OPENAI_API_KEY: "sk-a" }, { OPENAI_API_KEY: "sk-a" })).toEqual([]);
+    expect(shadowedEnvVars({ OPENAI_API_KEY: "sk-a" }, {})).toEqual([]);
+    expect(shadowedEnvVars({}, { OPENAI_API_KEY: "sk-a" })).toEqual([]);
+  });
+});
+
+describe("describeKey", () => {
+  it("never reveals more than the last four characters", () => {
+    expect(describeKey(undefined)).toBe("not set");
+    const described = describeKey("sk-proj-supersecretvalue1234");
+    expect(described).toContain("…1234");
+    expect(described).not.toContain("supersecret");
   });
 });

@@ -47,3 +47,22 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
 }
 
 export const APP_CONFIG = Symbol("APP_CONFIG");
+
+/**
+ * process.loadEnvFile() never overrides variables already set in the shell, so a
+ * stale OPENAI_API_KEY in the OS environment silently beats the one in .env.
+ * Returns the names whose shell value differs from the .env file.
+ */
+export function shadowedEnvVars(
+  fileValues: Record<string, string | undefined>,
+  env: Record<string, string | undefined> = process.env,
+  names: string[] = ["OPENAI_API_KEY", "ASR_MODEL"],
+): string[] {
+  return names.filter((name) => fileValues[name] !== undefined && env[name] !== undefined && fileValues[name] !== env[name]);
+}
+
+/** Safe-to-log description of a secret: never the secret itself. */
+export function describeKey(key: string | undefined): string {
+  if (!key) return "not set";
+  return `${key.length} characters, ending …${key.slice(-4)}`;
+}
