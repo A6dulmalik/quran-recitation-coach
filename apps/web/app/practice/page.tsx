@@ -6,6 +6,7 @@ import { Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState
 import { AlertCircle, ChevronLeft, ChevronRight, Headphones, Loader2, Play, Square, Volume2, X } from "lucide-react";
 import { getAyahWords, type AyahWords, type SurahFile } from "@repo/quran-data";
 import { AyahText } from "@/components/ayah-text";
+import { DisplaySettings } from "@/components/display-settings";
 import { ErrorState, InvalidRangeState, LoadingState } from "@/components/page-states";
 import { FeedbackPanel } from "@/components/practice/feedback-panel";
 import { RecordButton, type RecordButtonState } from "@/components/practice/record-button";
@@ -15,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useAudioPlayer } from "@/hooks/use-audio-player";
 import { useLiveFeedback } from "@/hooks/use-live-feedback";
+import { useReadingPrefs } from "@/hooks/use-reading-prefs";
 import { useProgress } from "@/hooks/use-progress";
 import { RecorderError, useRecorder } from "@/hooks/use-recorder";
 import { ApiError, evaluateRecording } from "@/lib/api";
@@ -72,10 +74,14 @@ function PracticeSession({ range, surah, startAt }: { range: AyahRange; surah: S
   const [sessionId] = useState(() => `${meta.number}-${Date.now().toString(36)}`);
   const [startedAt] = useState(() => new Date().toISOString());
   const player = useAudioPlayer();
+  const prefs = useReadingPrefs();
   const abortRef = useRef<AbortController | null>(null);
 
   const ayah = state.ayahs[state.index];
   const words = wordsByAyah.get(ayah)!;
+  const record = surah.ayahs[ayah - 1];
+  const readAloud = prefs.transliteration ? record.transliteration : undefined;
+  const translation = prefs.translation ? record.translation : undefined;
   const attempts = state.attempts[ayah];
   const latest = state.phase === "evaluated" ? attempts?.latest : undefined;
   const isLast = state.index === state.ayahs.length - 1;
@@ -274,6 +280,7 @@ function PracticeSession({ range, surah, startAt }: { range: AyahRange; surah: S
           <span className="min-w-12 text-right text-sm tabular-nums text-muted-foreground">
             {state.index + 1}/{state.ayahs.length}
           </span>
+          <DisplaySettings />
         </div>
         <div className="mx-auto max-w-2xl px-4 pb-3 pt-2 text-center">
           <h1 className="font-semibold">{meta.transliteration}</h1>
@@ -336,6 +343,27 @@ function PracticeSession({ range, surah, startAt }: { range: AyahRange; surah: S
             ayahNumber={ayah}
             className="text-center text-[1.75rem] leading-[2.3] sm:text-[2rem]"
           />
+
+          {(readAloud || translation) && (
+            <div className="mt-5 space-y-4 border-t border-border/60 pt-4">
+              {readAloud && (
+                <section aria-label="Read in English">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Read in English
+                  </h2>
+                  <p className="mt-1 text-base font-medium leading-relaxed">{readAloud}</p>
+                </section>
+              )}
+              {translation && (
+                <section aria-label="Translation">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Translation
+                  </h2>
+                  <p className="mt-1 text-sm italic leading-relaxed text-muted-foreground">{translation}</p>
+                </section>
+              )}
+            </div>
+          )}
         </article>
 
         <div aria-live="polite" className="space-y-4">

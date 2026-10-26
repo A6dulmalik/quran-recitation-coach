@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Amiri_Quran, Geist } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ServiceWorker } from "@/components/service-worker";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
@@ -35,7 +36,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#00785a",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#00785a" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1512" },
+  ],
 };
 
 // Vercel Web Analytics only works on Vercel; opt in explicitly.
@@ -43,10 +47,12 @@ const analyticsEnabled = process.env.NEXT_PUBLIC_VERCEL_ANALYTICS === "1";
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" className="bg-background">
+    <html lang="en" className="bg-background" suppressHydrationWarning>
       <body className={`${geist.variable} ${amiriQuran.variable} font-sans antialiased`}>
-        {children}
-        <ServiceWorker />
+        <ThemeProvider>
+          {children}
+          <ServiceWorker />
+        </ThemeProvider>
         {analyticsEnabled && <Analytics />}
       </body>
     </html>
