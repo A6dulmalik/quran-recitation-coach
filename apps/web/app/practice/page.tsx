@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useAudioPlayer } from "@/hooks/use-audio-player";
+import { useLiveFeedback } from "@/hooks/use-live-feedback";
 import { useProgress } from "@/hooks/use-progress";
 import { RecorderError, useRecorder } from "@/hooks/use-recorder";
 import { ApiError, evaluateRecording } from "@/lib/api";
@@ -102,6 +103,12 @@ function PracticeSession({ range, surah, startAt }: { range: AyahRange; surah: S
   );
 
   const recorder = useRecorder({ onAutoStop: (audio) => void submit(audio, ayah) });
+  const liveFeedback = useLiveFeedback({
+    stream: recorder.stream,
+    recording: recorder.status === "recording",
+    ayah: words,
+    ayahKey: `${meta.number}:${ayah}`,
+  });
 
   // Object URLs for the user's recordings are released when replaced or on exit.
   useEffect(() => {
@@ -197,6 +204,19 @@ function PracticeSession({ range, surah, startAt }: { range: AyahRange; surah: S
     return () => window.removeEventListener("keydown", onKey);
   }, [toggleRecording, go, state.index, state.finished]);
 
+  // Stop by itself shortly after the last word has been judged.
+  const liveComplete = recorder.status === "recording" && !!liveFeedback.live?.complete;
+  const toggleRef = useRef(toggleRecording);
+  useEffect(() => {
+    toggleRef.current = toggleRecording;
+  }, [toggleRecording]);
+  useEffect(() => {
+    if (!liveComplete) return;
+    // Restarted whenever the transcript changes, so a late revision cancels it.
+    const timer = setTimeout(() => void toggleRef.current(), 900);
+    return () => clearTimeout(timer);
+  }, [liveComplete, liveFeedback.transcript]);
+
   const busy = recordState !== "idle";
   const referenceUrl = referenceAudioUrl(meta.number, ayah);
   const referenceStatus = player.statusFor(referenceUrl);
@@ -205,7 +225,9 @@ function PracticeSession({ range, surah, startAt }: { range: AyahRange; surah: S
 
   const hint =
     recordState === "recording"
-      ? `Listening… tap to stop · ${formatTime(recorder.elapsed)}`
+      ? liveFeedback.status === "unavailable"
+        ? `Listening… live feedback is unavailable, you'll get full feedback when you stop · ${formatTime(recorder.elapsed)}`
+        : `Listening… tap to stop · ${formatTime(recorder.elapsed)}`
       : recordState === "starting"
         ? "Starting the microphone… allow access if your browser asks"
         : recordState === "evaluating"
@@ -309,6 +331,8 @@ function PracticeSession({ range, surah, startAt }: { range: AyahRange; surah: S
           <AyahText
             words={words.words}
             results={latest?.words}
+            live={latest ? null : liveFeedback.live}
+            showCursor={recordState === "recording"}
             ayahNumber={ayah}
             className="text-center text-[1.75rem] leading-[2.3] sm:text-[2rem]"
           />

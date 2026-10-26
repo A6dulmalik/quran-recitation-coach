@@ -59,6 +59,8 @@ export function useRecorder({ maxSeconds = 180, onAutoStop }: UseRecorderOptions
   const [status, setStatus] = useState<RecorderStatus>("idle");
   const [elapsed, setElapsed] = useState(0);
   const [level, setLevel] = useState(0);
+  /** Live microphone stream while recording (for live recognition) */
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -84,6 +86,7 @@ export function useRecorder({ maxSeconds = 180, onAutoStop }: UseRecorderOptions
     audioCtxRef.current = null;
     recorderRef.current = null;
     setLevel(0);
+    setStream(null);
     setStatus("idle");
   }, []);
 
@@ -188,6 +191,7 @@ export function useRecorder({ maxSeconds = 180, onAutoStop }: UseRecorderOptions
     }, 250);
 
     recorder.start(250);
+    setStream(stream);
     setStatus("recording");
   }, [maxSeconds, teardown]);
 
@@ -203,5 +207,5 @@ export function useRecorder({ maxSeconds = 180, onAutoStop }: UseRecorderOptions
     }
   }, [teardown]);
 
-  return { status, elapsed, level, start, stop, cancel };
+  return { status, elapsed, level, stream, start, stop, cancel };
 }

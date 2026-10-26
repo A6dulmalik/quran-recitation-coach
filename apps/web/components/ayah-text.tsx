@@ -1,5 +1,6 @@
 import type { AyahWord } from "@repo/quran-data";
 import type { WordResult } from "@repo/types";
+import type { LiveResult } from "@repo/utils";
 import { cn } from "@/lib/utils";
 
 const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
@@ -21,31 +22,43 @@ interface AyahTextProps {
   words: AyahWord[];
   /** Per-word results to colour the text; omit for plain reading */
   results?: WordResult[];
+  /** Word-by-word feedback while the user is still reciting (ignored once results exist) */
+  live?: LiveResult | null;
+  /** Highlight the word the reciter should say next (live feedback only) */
+  showCursor?: boolean;
   ayahNumber?: number;
   className?: string;
 }
 
 /** Uthmani ayah text, word by word, with waqf marks and an end-of-ayah marker. */
-export function AyahText({ words, results, ayahNumber, className }: AyahTextProps) {
+export function AyahText({ words, results, live, showCursor, ayahNumber, className }: AyahTextProps) {
   return (
     <p lang="ar" dir="rtl" className={cn("font-arabic text-foreground", className)}>
       {words.map((word) => {
         const result = results?.[word.index];
-        const heard = result?.status === "incorrect" && result.recited;
+        const liveWord = result ? undefined : live?.words[word.index];
+        const status = result?.status ?? (liveWord && liveWord.status !== "pending" ? liveWord.status : undefined);
+        const heard = result?.status === "incorrect" ? result.recited : liveWord?.heard;
+        const active = !result && !!showCursor && live?.cursor === word.index;
         return (
           <span key={word.index}>
             <span
               data-word-index={word.index}
-              data-status={result?.status ?? "pending"}
-              title={heard ? `Heard: ${result.recited}` : undefined}
-              className={cn("transition-colors duration-300", result && STATUS_CLASS[result.status])}
+              data-status={status ?? "pending"}
+              data-active={active || undefined}
+              title={heard ? `Heard: ${heard}` : undefined}
+              className={cn(
+                "rounded-md transition-colors duration-300",
+                status && STATUS_CLASS[status],
+                active && "bg-primary/10",
+              )}
             >
               {word.text}
-              {result && result.status !== "correct" && (
+              {status && status !== "correct" && (
                 <span className="sr-only">
                   {" "}
-                  ({STATUS_LABEL[result.status]}
-                  {heard ? `, heard ${result.recited}` : ""})
+                  ({STATUS_LABEL[status]}
+                  {heard ? `, heard ${heard}` : ""})
                 </span>
               )}
             </span>
