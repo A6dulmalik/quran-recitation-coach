@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist",
+    "declaration": true,
+    "emitDeclarationOnly": false
+  },
+  "include": [
+    "src/**/*.ts",
+    "data/surahs.json"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
+}
