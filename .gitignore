@@ -29,3 +29,5 @@ playwright-report/
 node_modules
 .next/
 .DS_Store
+# Browser crash dumps
+debug.log

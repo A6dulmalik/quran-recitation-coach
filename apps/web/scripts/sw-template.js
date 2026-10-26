@@ -35,12 +35,28 @@ self.addEventListener("activate", (event) => {
 async function fillQuranCache() {
   const cache = await caches.open(QURAN_CACHE);
   const queue = [...QURAN_FILES];
+  const failed = [];
+  // One retry per file; anything still failing is reported, not hidden.
+  const addWithRetry = async (file) => {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await cache.add(file);
+        return;
+      } catch (error) {
+        if (attempt === 1) failed.push(file);
+      }
+    }
+  };
   const worker = async () => {
     for (let file = queue.shift(); file; file = queue.shift()) {
-      if (!(await cache.match(file))) await cache.add(file).catch(() => undefined);
+      if (!(await cache.match(file))) await addWithRetry(file);
     }
   };
   await Promise.all([worker(), worker(), worker(), worker()]);
+  if (failed.length) console.warn(`[sw] ${failed.length} surah file(s) could not be cached offline:`, failed);
+  const clients = await self.clients.matchAll();
+  const message = { type: "QURAN_CACHE", total: QURAN_FILES.length, failed };
+  for (const client of clients) client.postMessage(message);
 }
 
 self.addEventListener("message", (event) => {
