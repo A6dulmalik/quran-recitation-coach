@@ -27,3 +27,19 @@ How this package complies:
 
 To update: download new versions from https://tanzil.net/download/ into `sources/`, then run
 `npm run generate -w @repo/quran-data` and `npm test -w @repo/quran-data`.
+
+## English translation and transliteration (optional)
+
+The practice screen can show an English translation and a transliteration ("read in English")
+under each ayah. They are **not bundled yet**. To add them:
+
+1. Download the files from https://tanzil.net/trans/ — for example `en.sahih` (Saheeh International)
+   and `en.transliteration` — and save them unmodified as `sources/translation-en.txt` and
+   `sources/transliteration-en.txt`.
+2. Run `npm run generate -w @repo/quran-data`. Each ayah then carries `translation` /
+   `transliteration`, and the data files embed each file's copyright header
+   (`translationCopyright`, `transliterationCopyright`).
+3. Check each file's own license header: translations carry their own terms in addition to
+   Tanzil's, and the app must show the required attribution.
+
+Without the files, the data is generated exactly as before and the app hides those sections.

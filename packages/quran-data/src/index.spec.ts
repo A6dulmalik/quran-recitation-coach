@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { parseTanzilTranslation } from "../scripts/translation.mjs";
 import {
   AYAH_COUNT,
   getAyahWords,
@@ -141,5 +142,23 @@ describe("helpers", () => {
     expect(pauseAllowedAfter(undefined)).toBe(false);
     expect(pauseAllowedAfter("ۙ")).toBe(false); // ۙ do not stop
     expect(pauseAllowedAfter("ۚ")).toBe(true); // ۚ permissible
+  });
+});
+
+describe("parseTanzilTranslation", () => {
+  it("reads surah|ayah|text lines and keeps the license header", () => {
+    const { entries, copyright } = parseTanzilTranslation(
+      "# Translation: Saheeh International\n# License: attribution\n#\n1|1|In the name of Allah, the Entirely Merciful.\r\n1|2| [All] praise is [due] to Allah, Lord of the worlds. \n\n",
+    );
+    expect(entries.get("1:1")).toBe("In the name of Allah, the Entirely Merciful.");
+    expect(entries.get("1:2")).toBe("[All] praise is [due] to Allah, Lord of the worlds.");
+    expect(entries.size).toBe(2);
+    expect(copyright).toContain("Saheeh International");
+    expect(copyright).toContain("License: attribution");
+  });
+
+  it("copes with a BOM and ignores malformed lines", () => {
+    const { entries } = parseTanzilTranslation("\uFEFF2|255|Allah - there is no deity\nnot a line\n");
+    expect([...entries.keys()]).toEqual(["2:255"]);
   });
 });

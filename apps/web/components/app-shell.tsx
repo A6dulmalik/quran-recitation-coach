@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { BarChart3, BookOpen, Home } from "lucide-react";
 import { TANZIL_ATTRIBUTION } from "@repo/quran-data";
+import { DisplaySettings } from "@/components/display-settings";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -48,6 +49,7 @@ export function AppShell({ title, children }: { title?: string; children: ReactN
               </Link>
             ))}
           </nav>
+          <DisplaySettings />
         </div>
       </header>
 
