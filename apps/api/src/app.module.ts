@@ -2,6 +2,8 @@ import { Global, Module } from "@nestjs/common";
 import { MulterModule } from "@nestjs/platform-express";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { AppController } from "./app.controller";
+import { LiveSessionProvider } from "./asr/live-session";
+import { OpenAiLiveSessionProvider } from "./asr/openai-live-session";
 import { OpenAiSpeechRecognizer } from "./asr/openai-speech-recognizer";
 import { SpeechRecognizer } from "./asr/speech-recognizer";
 import { APP_CONFIG, loadConfig, type AppConfig } from "./config";
@@ -36,6 +38,10 @@ export class ConfigModule {}
     }),
   ],
   controllers: [AppController, RecitationController],
-  providers: [QuranService, { provide: SpeechRecognizer, useClass: OpenAiSpeechRecognizer }],
+  providers: [
+    QuranService,
+    { provide: SpeechRecognizer, useClass: OpenAiSpeechRecognizer },
+    { provide: LiveSessionProvider, useClass: OpenAiLiveSessionProvider },
+  ],
 })
 export class AppModule {}
